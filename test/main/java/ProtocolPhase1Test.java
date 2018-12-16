@@ -2,10 +2,10 @@ package main.java;
 
 import main.java.constants.Commands;
 import main.java.constants.Messages;
-import main.java.constants.Patterns;
 import main.java.core.Protocol;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.WeightedMultigraph;
+import org.jgrapht.graph.concurrent.AsSynchronizedGraph;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,10 +25,9 @@ public class ProtocolPhase1Test {
     private String expectedResult;
     private static Protocol protocol = new Protocol(null);
 
-
     @Before
     public void initialize() {
-        Main.weightedMultigraph = new WeightedMultigraph<>(DefaultWeightedEdge.class);
+        Server.weightedMultigraph = new AsSynchronizedGraph<>(new WeightedMultigraph<>(DefaultWeightedEdge.class));
     }
 
     public ProtocolPhase1Test(String inputString, String expectedResult) {
@@ -39,15 +38,13 @@ public class ProtocolPhase1Test {
     @Parameterized.Parameters
     public static Collection commands() {
         return Arrays.asList(new Object[][] {
-                { null, Messages.HI_I_AM + Patterns.UUID },
+                { null, Commands.HI_IM + Protocol.PATTERN_UUID},
                 { null, Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
-                { Messages.HI_I_AM + UUID.randomUUID(), Messages.HI + Patterns.UUID },
-                { Messages.UNKNOWN, Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
+                { Commands.HI_IM + UUID.randomUUID(), Messages.HI + Protocol.PATTERN_UUID},
+                { "UNKNOWN", Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
                 { null, Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
-                { Messages.HI_I_AM + UUID.randomUUID(), Messages.HI + Patterns.UUID },
+                { Commands.HI_IM, Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
                 { null, Messages.SORRY_DID_NOT_UNDERSTAND_THAT },
-                //{ null, Messages.SORRY_DID_NOT_UNDERSTAND_THAT }
-
         });
     }
 
@@ -55,77 +52,7 @@ public class ProtocolPhase1Test {
     public void testProcessInputForPhase1(){
         System.out.println("Parameterized Command is : " + inputString);
         Pattern pattern = Pattern.compile(expectedResult);
-
         String serverOutput = protocol.processInput(inputString);
         assertTrue(pattern.matcher(serverOutput).matches());
-
-       // assertTrue(serverOutput.contains("WE SPOKE FOR"));
-
-    }
-
-
-    @Test
-    public void testProcessInputWithAddNode(){
-
-        UUID uuid1 = UUID.randomUUID();
-        UUID uuid2 = UUID.randomUUID();
-
-        String serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_ALREADY_EXISTS));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_ALREADY_EXISTS));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid2);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-    }
-
-    @Test
-    public void testProcessInputWithRemoveNode(){
-
-        UUID uuid1 = UUID.randomUUID();
-        UUID uuid2 = UUID.randomUUID();
-
-        String serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_ALREADY_EXISTS));
-
-        serverOutput = protocol.processInput(Commands.REMOVE_NODE + UUID.randomUUID());
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_NOT_FOUND));
-
-        serverOutput = protocol.processInput(Commands.REMOVE_NODE + UUID.randomUUID());
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_NOT_FOUND));
-
-        serverOutput = protocol.processInput(Commands.REMOVE_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.NODE_REMOVED));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid1);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_ALREADY_EXISTS));
-
-        serverOutput = protocol.processInput(Commands.ADD_NODE + uuid2);
-        assertTrue(serverOutput.matches(Messages.NODE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_EDGE + uuid1);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_NOT_FOUND));
-
-        serverOutput = protocol.processInput(Commands.ADD_EDGE + uuid1 + " " +  UUID.randomUUID() + " " + 3);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_NOT_FOUND));
-
-        serverOutput = protocol.processInput(Commands.ADD_EDGE + uuid1 + " " +  uuid2 + " " + 3);
-        assertTrue(serverOutput.matches(Messages.EDGE_ADDED));
-
-        serverOutput = protocol.processInput(Commands.ADD_EDGE + uuid1 + " " +  uuid2 + " " + 3);
-        assertTrue(serverOutput.matches(Messages.ERROR_NODE_NOT_FOUND));
     }
 }

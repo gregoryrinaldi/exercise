@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
-import static main.java.Main.weightedMultigraph;
+import static main.java.Server.weightedMultigraph;
 
 @RunWith(JUnit4.class)
 public class ProtocolHelperTest {
